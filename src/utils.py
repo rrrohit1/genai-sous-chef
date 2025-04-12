@@ -29,13 +29,18 @@ def detect_ingredients(image_path):
         - The generative model used is "gemini-pro-vision".
         - Ensure the image file exists and is accessible at the specified path.
     """
-    genai.configure(api_key=config.GOOGLE_API_KEY)
-    model = genai.GenerativeModel("gemini-pro-vision")
-    with open(image_path, "rb") as f:
-        img_bytes = f.read()
-    image = Image.open(io.BytesIO(img_bytes))
-    response = model.generate_content(["What ingredients do you see in this image?", image])
-    return response.text.split("\n")
+    img = Image.open(image_path)
+    prompt = """What food ingredients do you see in this photo?
+                Return ONLY a simple comma-separated list of ingredients without any additional text, explanations, or formatting.
+                For example: "tomatoes, onions, garlic, chicken" or "flour, sugar, eggs, milk"
+                Do not include any commentary, introductions, or conclusions.
+            """
+
+    response = client.models.generate_content(model=config.MODEL_NAME, contents=[prompt, img])
+    raw_text = response.text
+
+    raw_ingredients = [i.strip().lower() for i in raw_text.split(",") if i.strip()]
+    return raw_ingredients
 
 def normalize_ingredients(raw_ingredients):
     """

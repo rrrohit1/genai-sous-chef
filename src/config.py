@@ -1,6 +1,10 @@
 import os
 from dotenv import load_dotenv
 
+# Get the path of the repository
+ROOT_PATH = os.getcwd().split("genai-sous-chef")[0] + "genai-sous-chef"
+
+
 
 # Load environment variables from .env file
 load_dotenv()
