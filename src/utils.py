@@ -3,6 +3,16 @@ from PIL import Image
 import io
 import re
 import pyttsx3
+import config
+
+from google.api_core import retry
+from google import genai
+
+is_retriable = lambda e: (isinstance(e, genai.errors.APIError) and e.code in {429, 503})
+
+genai.models.Models.generate_content = retry.Retry(
+    predicate=is_retriable)(genai.models.Models.generate_content)
+client = genai.Client(api_key=config.GOOGLE_API_KEY)
 
 def detect_ingredients(image_path):
     """
@@ -19,7 +29,7 @@ def detect_ingredients(image_path):
         - The generative model used is "gemini-pro-vision".
         - Ensure the image file exists and is accessible at the specified path.
     """
-    genai.configure(api_key="YOUR_API_KEY")
+    genai.configure(api_key=config.GOOGLE_API_KEY)
     model = genai.GenerativeModel("gemini-pro-vision")
     with open(image_path, "rb") as f:
         img_bytes = f.read()
@@ -70,10 +80,18 @@ def generate_recipe(ingredients):
         - This function requires the `genai` library to be configured with a valid API key.
         - The generative model used is "gemini-pro".
     """
-    genai.configure(api_key="YOUR_API_KEY")
-    model = genai.GenerativeModel("gemini-pro")
-    prompt = f"Generate a recipe using the following ingredients: {', '.join(ingredients)}"
-    response = model.generate_content(prompt)
+    prompt = f"""
+    You are a professional chef AI. Given these ingredients: {', '.join(ingredients)},
+    generate a creative and tasty recipe. Include:
+    - A title
+    - Estimated cooking time
+    - Ingredients with quantities
+    - Step-by-step instructions
+    - A tip for enhancement
+    """
+    response = client.models.generate_content(
+    model=config.MODEL_NAME,
+    contents=prompt)
     return response.text
 
 def generate_step_images(recipe_text):
@@ -100,7 +118,7 @@ def generate_step_images(recipe_text):
         #     ("Sauté the onions in a pan", <image_object>)
         # ]
     """
-    genai.configure(api_key="YOUR_API_KEY")
+    genai.configure(api_key=config.GOOGLE_API_KEY)
     model = genai.GenerativeModel("gemini-pro-vision")
     steps = [s.strip() for s in recipe_text.split(". ") if s]
     images = []
