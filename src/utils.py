@@ -4,9 +4,11 @@ import io
 import re
 import pyttsx3
 import config
-
+import json
 from google.api_core import retry
 from google import genai
+from google.genai import types
+from io import BytesIO
 
 is_retriable = lambda e: (isinstance(e, genai.errors.APIError) and e.code in {429, 503})
 
@@ -79,7 +81,7 @@ def generate_recipe(ingredients):
         ingredients (list of str): A list of ingredient names to be used in the recipe.
 
     Returns:
-        str: The generated recipe as a text string.
+        dict: The generated recipe is returned as a dictionary.
 
     Note:
         - This function requires the `genai` library to be configured with a valid API key.
@@ -87,49 +89,69 @@ def generate_recipe(ingredients):
     """
     prompt = f"""
     You are a professional chef AI. Given these ingredients: {', '.join(ingredients)},
-    generate a creative and tasty recipe. Include:
-    - A title
-    - Estimated cooking time
-    - Ingredients with quantities
-    - Step-by-step instructions
-    - A tip for enhancement
+    generate a creative and tasty recipe in the following format:
+    dict: The generated recipe is returned as a dictionary containing:
+            - title (str): The title of the recipe.
+            - cooking_time (str): The estimated cooking time.
+            - ingredients (list of str): A list of ingredients with quantities.
+            - instructions (list of str): Step-by-step instructions for the recipe.
+            - tip (str): A tip for enhancing the dish.
+    Example:
+        {{"tite": "Spaghetti Aglio e Olio",
+         "cooking_time": "20 minutes",
+         "ingredients": ["spaghetti: 200g", "garlic: 4 cloves", "olive oil: 50ml"],
+         "instructions": ["Boil water.", "Add spaghetti.", "Sauté garlic."],
+         "tip": "Use fresh parsley for garnish."}}
+    Only return the recipe in the specified format without any additional text or explanations.
     """
     response = client.models.generate_content(
     model=config.MODEL_NAME,
     contents=prompt)
-    return response.text
 
-def generate_step_images(recipe_text):
+    try:
+        # Extract JSON from the response
+        response_json = json.loads(response.text.strip("```json\n").strip("```"))
+        return response_json
+    except json.JSONDecodeError as e:
+        # Handle the case where the response is not valid JSON
+        print(e)
+        return None
+
+
+def generate_step_images(recipe):
     """
-    Generates a list of images corresponding to each step in a recipe.
-
-    This function uses a generative AI model to create visual representations
-    of each step in the provided recipe text. The recipe text is split into
-    individual steps, and an image is generated for each step.
+    Generate images for each step in a recipe using Gemini's multimodal model.
 
     Args:
-        recipe_text (str): A string containing the recipe steps, where each
-            step is separated by a period and a space (". ").
+        recipe (dict): Must contain a list of instruction steps under the key "instructions".
 
     Returns:
-        list of tuple: A list of tuples, where each tuple contains a recipe
-        step (str) and the corresponding generated image (object).
+        list of PIL.Image.Image: Images representing each recipe step.
 
-    Example:
-        recipe_text = "Chop the onions. Sauté the onions in a pan."
-        images = generate_step_images(recipe_text)
-        # images = [
-        #     ("Chop the onions", <image_object>),
-        #     ("Sauté the onions in a pan", <image_object>)
-        # ]
+    Notes:
+        - Uses 'gemini-2.0-flash-exp-image-generation'.
+        - Text responses are printed; images are returned.
+        - Assumes a configured Gemini client named `client`.
     """
-    genai.configure(api_key=config.GOOGLE_API_KEY)
-    model = genai.GenerativeModel("gemini-pro-vision")
-    steps = [s.strip() for s in recipe_text.split(". ") if s]
+
     images = []
-    for step in steps:
-        image = model.generate_content([f"Generate an image of: {step}"])
-        images.append((step, image))
+    for step in recipe["instructions"]:
+        image_response = client.models.generate_content(
+            model="gemini-2.0-flash-exp-image-generation",
+            contents=f"Generate an image for this step: {step}",
+            config=types.GenerateContentConfig(
+            response_modalities=['TEXT', 'IMAGE'],
+            # system_instruction="You are a helpful assistant that generates images for cooking instructions. You will help me create images for each step of the recipe.",
+            ))
+
+        for part in image_response.candidates[0].content.parts:
+            if part.text is not None:
+                print(part.text)
+            elif part.inline_data is not None:
+                image = Image.open(BytesIO((part.inline_data.data)))
+                # image.save(response["title"] + "/" + step + ".jpg")
+                images.append(image)
+                # print("Image saved for step:", step)
     return images
 
 def narrate_recipe(recipe_text):

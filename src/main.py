@@ -14,10 +14,10 @@ def main():
 
     print("\nGenerating recipe...\n")
     recipe = generate_recipe(args.ingredients)
-    
-    return recipe
 
-    # visuals = generate_step_images(recipe)
+    visuals = generate_step_images(recipe)
+
+    return recipe
 
     # narration = narrate_recipe(recipe)
 
