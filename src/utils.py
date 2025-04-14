@@ -16,6 +16,16 @@ genai.models.Models.generate_content = retry.Retry(
     predicate=is_retriable)(genai.models.Models.generate_content)
 client = genai.Client(api_key=config.GOOGLE_API_KEY)
 
+
+def get_dict_from_response(response):
+    try:
+        # Extract JSON from the response
+        return json.loads(response.text.strip("```json\n").strip("```"))
+    except json.JSONDecodeError as e:
+        # Handle the case where the response is not valid JSON
+        print(e)
+        return None
+
 def detect_ingredients(image_path):
     """
     Detects ingredients present in an image using a generative AI model.
@@ -108,14 +118,8 @@ def generate_recipe(ingredients):
     model=config.MODEL_NAME,
     contents=prompt)
 
-    try:
-        # Extract JSON from the response
-        response_json = json.loads(response.text.strip("```json\n").strip("```"))
-        return response_json
-    except json.JSONDecodeError as e:
-        # Handle the case where the response is not valid JSON
-        print(e)
-        return None
+    response_dict = get_dict_from_response(response)
+    return response_dict
 
 
 def generate_step_images(recipe):
@@ -154,6 +158,45 @@ def generate_step_images(recipe):
                 # print("Image saved for step:", step)
     return images
 
+def get_nutrition_info(recipe):
+    """
+        Calculate the approximate total nutritional values for a given recipe.
+        This function uses a nutritionist AI model to estimate the nutritional 
+        content of a recipe based on its list of ingredients. The output is a 
+        dictionary containing the total protein, fat, carbohydrates, and calories 
+        for the entire recipe.
+        Args:
+            recipe (dict): A dictionary containing recipe details. It must include 
+                        a key 'ingredients', which is a list of ingredients 
+                        used in the recipe.
+        Returns:
+            dict: A dictionary with the following keys and their corresponding 
+                nutritional values (rounded to the nearest whole number):
+    """
+    nutrient_PROMPT = f""" 
+                    You are a nutritionist AI. Given the following list of ingredients: {recipe['ingredients']}, 
+                    calculate the approximate total nutritional values for the entire recipe. Return only a dictionary with the following keys:
+                    - "protein (in g)"
+                    - "fat (in g)"
+                    - "carbohydrates (in g)"
+                    - "calories (in kcal)"
+                
+                    Round all values to the nearest whole number. Do not include any explanation—just return the dictionary.
+                    Example output: 
+                    {{
+                        "protein (in g)": 18,
+                        "fat (in g)": 22, 
+                        "carbohydrates (in g)": 45, 
+                        "calories (in kcal)": 450 
+                    }}
+                    """
+
+    nutrient_response = client.models.generate_content(
+        model=config.MODEL_NAME,
+        contents=nutrient_PROMPT)
+    nutrient_response_dict = get_dict_from_response(nutrient_response)
+    return nutrient_response_dict
+
 def narrate_recipe(recipe_text):
     """
     Converts the given recipe text into speech using a text-to-speech engine.
@@ -167,3 +210,26 @@ def narrate_recipe(recipe_text):
     engine = pyttsx3.init()
     engine.say(recipe_text)
     engine.runAndWait()
+
+
+
+######### Plots #########
+import matplotlib.pyplot as plt
+
+def show_images_with_text(images, texts):
+    n = len(images)
+    fig, axs = plt.subplots(n, 2, figsize=(10, 2 * n))
+    if n == 1:
+        axs = [axs]  # Ensure it's iterable when n=1
+
+    for i in range(n):
+        # Show text
+        axs[i][0].axis('off')
+        axs[i][0].text(0.01, 0.5, texts[i], fontsize=12, va='center', wrap=True)
+
+        # Show image
+        axs[i][1].imshow(images[i])
+        axs[i][1].axis('off')
+
+    plt.tight_layout()
+    plt.show()
