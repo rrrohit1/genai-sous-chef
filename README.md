@@ -1,6 +1,8 @@
 # 🧑‍🍳 GenAI Sous-Chef
 
-A smart, Gemini-powered culinary assistant that takes ingredients from your pantry (or a photo of them) and cooks up delicious recipes — complete with structured outputs, nutritional info, and even visual recipe cards. Designed as a capstone GenAI project for the Google x Kaggle 5-Day GenAI course.
+A smart, Gemini-powered culinary assistant that transforms ingredients from your pantry (or a photo) into full-fledged recipes — complete with structured outputs, nutritional breakdowns, and image-guided instructions. Built using LangGraph agents and Gemini API, this project demonstrates the power of GenAI orchestration across multiple modalities.
+
+Designed as a capstone GenAI project for the **Google x Kaggle 5-Day GenAI course**.
 
 ---
 
@@ -8,79 +10,95 @@ A smart, Gemini-powered culinary assistant that takes ingredients from your pant
 
 GenAI Sous-Chef can:
 
-- ✅ Accept ingredients as text or photo  
-- ✅ Understand your pantry via image understanding (Gemini Vision)  
-- ✅ Generate step-by-step recipes using Gemini 1.5 Pro  
-- ✅ Output structured JSON for downstream use (shopping list, meal planning, etc.)  
-- ✅ Generate visual recipe cards with image captions  
-- ✅ Rate the recipe or give alternate options using few-shot prompts  
-- ✅ Ground recipes to real nutritional guidelines (optional RAG)  
-- ✅ Cache context for longer interactions  
-- ✅ Log inputs/outputs with MLOps-style observability  
+- ✅ Accept ingredients as plain text or from a pantry image  
+- ✅ Use Gemini Vision to understand visual ingredients *(optional)*  
+- ✅ Generate structured, step-by-step recipes using Gemini Flash  
+- ✅ Visualize each cooking step using image generation  
+- ✅ Compute nutrition insights using AI-generated reasoning  
+- ✅ Use LangGraph agents to modularize and chain tasks  
+- ✅ Display recipe + image instructions in a unified interface  
+- ✅ Produce structured JSON output for integrations (shopping lists, apps, etc.)
 
 ---
 
 ## ✨ GenAI Capabilities Demonstrated
 
-This project demonstrates 12+ GenAI capabilities:
+This project showcases **7 key GenAI capabilities**:
 
 - [x] Structured Output / JSON Mode  
 - [x] Few-shot Prompting  
-- [x] Document Understanding  
 - [x] Image Understanding (Gemini Vision)  
-- [x] Function Calling  
-- [x] Long Context Window  
-- [x] Context Caching  
-- [x] Grounding  
-- [x] Embeddings (for recipe similarity or tags)  
-- [x] Retrieval Augmented Generation (optional for nutrition grounding)  
-- [x] Vector Search (planned)  
-- [x] MLOps-style Logging  
+- [x] Function Calling (via LangGraph agent nodes)  
+- [x] Agents (LangGraph task orchestration)  
+- [x] Long Context Window (multi-step recipe and nutrition processing)  
+- [x] Grounding (based on user-provided ingredient context)  
 
 ---
 
 ## 🏗️ Project Structure
 
-TBD
+```text
+.
+├── agents.py               # LangGraph pipeline definition
+├── config.py               # Environment and API keys
+├── main.py                 # CLI entry point for generation
+├── utils.py                # Core logic for recipe gen, nutrition, visuals
+├── notebooks/
+│   └── sous_chef_demo.ipynb   # Step-by-step walkthrough notebook
+├── data/                   # Pantry image samples (optional)
+└── README.md
+```
 
 ## 🚀 Quickstart
 
-1. Clone the repository:
+### 1. Clone the repository
 
-    ```bash
-    git clone https://github.com/your-username/genai-sous-chef.git
-    cd genai-sous-chef
-    ```
 
-2. Install the required dependencies:
+```bash
+git clone https://github.com/your-username/genai-sous-chef.git
+cd genai-sous-chef
+```
 
-    ```bash
-    pip install -r requirements.txt
-    ```
+### 2. Set up the Conda environment
 
-3. Set up your Google API Key (for Gemini access):
+Create and activate the environment from `environment.yaml`:
 
-    You can either export it as an environment variable:
+```bash
+conda env create -f environment.yaml
+conda activate genai-sous-chef
+```
 
-    ```bash
-    export GOOGLE_API_KEY="your_api_key_here"
-    ```
+### 3. Set up your Google API Key (for Gemini access)
 
-    Or create a `.env` file in the project root directory with:
+You can either export it as an environment variable:
 
-    ```env
-    GOOGLE_API_KEY=your_api_key_here
-    ```
+```bash
+export GOOGLE_API_KEY="your_api_key_here"
+```
 
-4. Run the notebook demo:
+Or create a `.env` file in the project root directory with:
 
-    Launch Jupyter and open the notebook:
+```env
+GOOGLE_API_KEY=your_api_key_here
+```
 
-    ```bash
-    jupyter notebook notebooks/demo_genai_sous_chef.ipynb
-    ```
+### 4. Run the notebook demo
 
-    Follow the instructions to generate recipes using either text or image input.
+Launch Jupyter and open the notebook:
+
+```bash
+jupyter notebook notebooks/sous_chef_demo.ipynb
+```
+
+Follow the instructions to generate recipes using either text or image input.
+
+## 🧠 Example Pipeline
+
+1. Ingredients →
+2. generate_recipe agent node (Gemini Flash) →
+3. generate_images node (Gemini Image model) →
+4. get_nutrition node (Gemini Flash) →
+5. 📋 Combined structured output with step-wise visuals and insights
 
 ## 📜 License
 
