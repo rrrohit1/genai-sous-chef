@@ -26,7 +26,7 @@ def get_dict_from_response(response):
         print(e)
         return None
 
-def detect_ingredients(image_path):
+def detect_ingredients(image_path, selected_model=config.TEXT_MODEL_NAME):
     """
     Detects ingredients present in an image using a generative AI model.
 
@@ -48,7 +48,7 @@ def detect_ingredients(image_path):
                 Do not include any commentary, introductions, or conclusions.
             """
 
-    response = client.models.generate_content(model=config.MODEL_NAME, contents=[prompt, img])
+    response = client.models.generate_content(model=selected_model, contents=[prompt, img])
     raw_text = response.text
 
     raw_ingredients = [i.strip().lower() for i in raw_text.split(",") if i.strip()]
@@ -83,7 +83,7 @@ def normalize_ingredients(raw_ingredients):
             normalized.append(clean_item)
     return list(set(normalized))
 
-def generate_recipe(ingredients):
+def generate_recipe(ingredients, selected_model=config.TEXT_MODEL_NAME):
     """
     Generates a recipe based on the provided list of ingredients using a generative AI model.
 
@@ -115,14 +115,14 @@ def generate_recipe(ingredients):
     Only return the recipe in the specified format without any additional text or explanations.
     """
     response = client.models.generate_content(
-    model=config.MODEL_NAME,
+    model=selected_model,
     contents=prompt)
 
     response_dict = get_dict_from_response(response)
     return response_dict
 
 
-def generate_step_images(recipe):
+def generate_step_images(recipe, selected_model=config.IMAGE_MODEL_NAME):
     """
     Generate images for each step in a recipe using Gemini's multimodal model.
 
@@ -141,7 +141,7 @@ def generate_step_images(recipe):
     images = []
     for step in recipe["instructions"]:
         image_response = client.models.generate_content(
-            model="gemini-2.0-flash-exp-image-generation",
+            model=selected_model,
             contents=f"Generate an image for this step: {step}",
             config=types.GenerateContentConfig(
             response_modalities=['TEXT', 'IMAGE'],
@@ -158,7 +158,7 @@ def generate_step_images(recipe):
                 # print("Image saved for step:", step)
     return images
 
-def get_nutrition_info(recipe):
+def get_nutrition_info(recipe, selected_model=config.TEXT_MODEL_NAME):
     """
         Calculate the approximate total nutritional values for a given recipe.
         This function uses a nutritionist AI model to estimate the nutritional 
@@ -192,7 +192,7 @@ def get_nutrition_info(recipe):
                     """
 
     nutrient_response = client.models.generate_content(
-        model=config.MODEL_NAME,
+        model=selected_model,
         contents=nutrient_PROMPT)
     nutrient_response_dict = get_dict_from_response(nutrient_response)
     return nutrient_response_dict

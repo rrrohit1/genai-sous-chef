@@ -11,5 +11,6 @@ load_dotenv()
 
 # Access the key
 GOOGLE_API_KEY=os.getenv("GOOGLE_API_KEY")
-MODEL_NAME="gemini-2.0-flash"
+TEXT_MODEL_NAME = "gemini-2.0-flash"
+IMAGE_MODEL_NAME = "gemini-2.0-flash-exp-image-generation"
 
