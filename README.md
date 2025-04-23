@@ -4,7 +4,11 @@ A smart, Gemini-powered culinary assistant that transforms ingredients from your
 
 Designed as a capstone GenAI project for the **Google x Kaggle 5-Day GenAI course**.
 
----
+## External Articles & Notebooks
+
+- [Kaggle Notebook Demo](https://www.kaggle.com/code/rrrohit/genai-sous-chef-demo)
+- [Medium Article](https://medium.com/@rrrohit/️-from-pantry-to-plate-building-a-genai-sous-chef-with-langgraph-gemini-3ec32ea225a7)
+
 
 ## 🌟 What Can It Do?
 
@@ -19,8 +23,6 @@ GenAI Sous-Chef can:
 - ✅ Display recipe + image instructions in a unified interface  
 - ✅ Produce structured JSON output for integrations (shopping lists, apps, etc.)
 
----
-
 ## ✨ GenAI Capabilities Demonstrated
 
 This project showcases **7 key GenAI capabilities**:
@@ -32,8 +34,6 @@ This project showcases **7 key GenAI capabilities**:
 - [x] Agents (LangGraph task orchestration)  
 - [x] Long Context Window (multi-step recipe and nutrition processing)  
 - [x] Grounding (based on user-provided ingredient context)  
-
----
 
 ## 🏗️ Project Structure
 
